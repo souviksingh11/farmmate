@@ -6,15 +6,25 @@ import { swalSuccess, swalError } from "../utils/swal";
 
 export default function Fertilizer() {
   const [plans, setPlans] = useState([]);
-  const [form, setForm] = useState({
-    crop: "",
-    soil: "",
-    ph: "",
-    n: "N",
-    p: "P",
-    k: "K",
-    size: "",
-  });
+  // const [form, setForm] = useState({
+  //   crop: "",
+  //   soil: "",
+  //   ph: "",
+  //   n: "N",
+  //   p: "P",
+  //   k: "K",
+  //   size: "",
+  // });
+const initialFormState = {
+  crop: "",
+  soil: "",
+  ph: "",
+  n: "",
+  p: "",
+  k: "",
+  size: "",
+};
+const [form, setForm] = useState(initialFormState);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -46,66 +56,63 @@ export default function Fertilizer() {
   }
 
   async function onSubmit(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  const crop = form.crop.trim();
-  const soil = form.soil.trim();
+    const crop = form.crop.trim();
+    const soil = form.soil.trim();
 
-  if (!crop) {
-    swalError("Crop Required", "Please enter the crop type.");
-    return;
+    if (!crop) {
+      swalError("Crop Required", "Please enter the crop type.");
+      return;
+    }
+
+    if (!soil) {
+      swalError("Soil Type Required", "Please enter the soil type.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // 🔥 Send RAW DATA to backend (AI will handle logic)
+      const newPlan = await createPlan({
+        crop,
+        soil,
+        ph: form.ph,
+        N: form.n && !isNaN(form.n) ? Number(form.n) : null,
+P: form.p && !isNaN(form.p) ? Number(form.p) : null,
+K: form.k && !isNaN(form.k) ? Number(form.k) : null,
+
+        size: form.size,
+      });
+
+      const planWithFallback = newPlan || {
+        _id: Date.now().toString(),
+        crop,
+        recommendation: "AI recommendation pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      setPlans((prev) => [planWithFallback, ...prev]);
+      setSelectedPlanId(planWithFallback._id);
+
+      // Reset only needed fields
+      setForm(initialFormState);
+
+
+      swalSuccess(
+        "Recommendation Generated",
+        "AI-powered fertilizer recommendation created successfully.",
+      );
+    } catch (e) {
+      swalError(
+        "Failed",
+        "Failed to generate fertilizer recommendation. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
-
-  if (!soil) {
-    swalError("Soil Type Required", "Please enter the soil type.");
-    return;
-  }
-
-  try {
-    setSubmitting(true);
-
-    // 🔥 Send RAW DATA to backend (AI will handle logic)
-    const newPlan = await createPlan({
-      crop,
-      soil,
-      ph: form.ph,
-      N: Number(form.n),
-      P: Number(form.p),
-      K: Number(form.k),
-      size: form.size,
-    });
-
-    const planWithFallback = newPlan || {
-      _id: Date.now().toString(),
-      crop,
-      recommendation: "AI recommendation pending",
-      createdAt: new Date().toISOString(),
-    };
-
-    setPlans((prev) => [planWithFallback, ...prev]);
-    setSelectedPlanId(planWithFallback._id);
-
-    // Reset only needed fields
-    setForm((prev) => ({
-      ...prev,
-      crop: "",
-      size: "",
-    }));
-
-    swalSuccess(
-      "Recommendation Generated",
-      "AI-powered fertilizer recommendation created successfully."
-    );
-  } catch (e) {
-    swalError(
-      "Failed",
-      "Failed to generate fertilizer recommendation. Please try again."
-    );
-  } finally {
-    setSubmitting(false);
-  }
-}
-
 
   const selectedPlan =
     plans.find((p) => p._id === selectedPlanId) || plans[0] || null;
@@ -134,7 +141,9 @@ export default function Fertilizer() {
 
                   <form onSubmit={onSubmit} className="row g-3">
                     <div className="col-12">
-                      <label className="form-label">Crop Type <span className="text-danger">*</span></label>
+                      <label className="form-label">
+                        Crop Type <span className="text-danger">*</span>
+                      </label>
                       <input
                         className="form-control"
                         placeholder="e.g., Rice, Wheat, Tomato, Corn..."
@@ -143,7 +152,9 @@ export default function Fertilizer() {
                       />
                     </div>
                     <div className="col-12">
-                      <label className="form-label">Soil Type <span className="text-danger">*</span></label>
+                      <label className="form-label">
+                        Soil Type <span className="text-danger">*</span>
+                      </label>
                       <input
                         className="form-control"
                         placeholder="e.g., Loamy, Clay, Sandy..."
@@ -167,6 +178,7 @@ export default function Fertilizer() {
                       <label className="form-label">Nitrogen Level (N)</label>
                       <input
                         className="form-control"
+                        placeholder="e.g., 60 (kg/ha)"
                         value={form.n}
                         onChange={(e) => handleChange("n", e.target.value)}
                       />
@@ -175,6 +187,7 @@ export default function Fertilizer() {
                       <label className="form-label">Phosphorus Level (P)</label>
                       <input
                         className="form-control"
+                        placeholder="e.g., 40(kg/ha)"
                         value={form.p}
                         onChange={(e) => handleChange("p", e.target.value)}
                       />
@@ -183,6 +196,7 @@ export default function Fertilizer() {
                       <label className="form-label">Potassium Level (K)</label>
                       <input
                         className="form-control"
+                        placeholder="e.g., 30(kg/ha)"
                         value={form.k}
                         onChange={(e) => handleChange("k", e.target.value)}
                       />
@@ -191,6 +205,7 @@ export default function Fertilizer() {
                       <label className="form-label">Farm Size (acres)</label>
                       <input
                         className="form-control"
+                        placeholder="e.g., 2.5 acres"
                         value={form.size}
                         onChange={(e) => handleChange("size", e.target.value)}
                       />
@@ -272,9 +287,9 @@ export default function Fertilizer() {
                             </div>
                           </div>
                           <div style={{ fontSize: 14, whiteSpace: "pre-line" }}>
-  {selectedPlan.recommendation ||
-    "No recommendation text available."}
-</div>
+                            {selectedPlan.recommendation ||
+                              "No recommendation text available."}
+                          </div>
                         </div>
                       )}
 

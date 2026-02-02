@@ -1,7 +1,17 @@
-import { FaBell, FaExclamationTriangle, FaLeaf, FaInfoCircle } from 'react-icons/fa';
+import {
+  FaBell,
+  FaExclamationTriangle,
+  FaLeaf,
+  FaInfoCircle,
+} from "react-icons/fa";
 
-export default function NotificationPanel({ alerts = [], activities = [], advisories = [] }) {
-  const totalNotifications = alerts.length + activities.length + advisories.length;
+export default function NotificationPanel({
+  alerts = [],
+  activities = [],
+  advisories = [],
+}) {
+  const totalNotifications =
+    alerts.length + activities.length + advisories.length;
 
   return (
     <div className="card border-0 shadow-sm h-100 notif-card">
@@ -38,6 +48,7 @@ export default function NotificationPanel({ alerts = [], activities = [], adviso
         )}
 
         {/* Recent Activity */}
+        {/* Recent Activity */}
         <div className="mb-3">
           <div className="d-flex align-items-center gap-2 mb-2">
             <FaLeaf className="text-success" />
@@ -52,12 +63,32 @@ export default function NotificationPanel({ alerts = [], activities = [], adviso
                     <span className="notif-dot" />
                     <span className="notif-timeline-line" />
                   </div>
-                  <div className="notif-timeline-content">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="notif-activity-title">{a.title}</span>
-                      {typeof a.confidence === 'number' && (
-                        <span className="badge rounded-pill notif-confidence-badge">
-                          {Math.round(a.confidence <= 1 ? a.confidence * 100 : a.confidence)}%
+
+                  <div
+                    className="notif-timeline-content"
+                    style={{ minWidth: 0 }}
+                  >
+                    <div className="d-flex align-items-start justify-content-between flex-wrap">
+                      {/* Title */}
+                      <span
+                        className="notif-activity-title text-break"
+                        style={{ flex: 1, minWidth: 0 }}
+                      >
+                        {a.title}
+                      </span>
+
+                      {/* Confidence Badge */}
+                      {typeof a.confidence === "number" && (
+                        <span
+                          className="badge rounded-pill notif-confidence-badge ms-2 mt-1"
+                          style={{ whiteSpace: "nowrap" }}
+                        >
+                          {Math.round(
+                            a.confidence <= 1
+                              ? a.confidence * 100
+                              : a.confidence,
+                          )}
+                          %
                         </span>
                       )}
                     </div>

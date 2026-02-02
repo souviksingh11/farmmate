@@ -5,10 +5,14 @@ const scanSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     farm: { type: mongoose.Schema.Types.ObjectId, ref: 'Farm' },
     imageUrl: String,
+
     result: {
-      disease: String,
-      confidence: Number,
-      recommendations: [String],
+      disease: { type: String },
+      confidence: { type: Number },
+      type: { type: String },        // fungal / bacterial / healthy
+      severity: { type: String },    // High / Medium / Low
+      fertilizer: { type: String },
+      recommendations: [{ type: String }],
     },
   },
   { timestamps: true }
@@ -16,5 +20,3 @@ const scanSchema = new mongoose.Schema(
 
 const Scan = mongoose.model('Scan', scanSchema);
 export default Scan;
-
-

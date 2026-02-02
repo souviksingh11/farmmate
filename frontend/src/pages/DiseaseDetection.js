@@ -1,19 +1,18 @@
-import { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import PageHeader from '../components/PageHeader';
-import { createScan } from '../services/scanService';
+import { useState } from "react";
+import Sidebar from "../components/Sidebar";
+import PageHeader from "../components/PageHeader";
+import { createScan } from "../services/scanService";
 import { swalSuccess, swalError, swalConfirm } from "../utils/swal";
-
 
 export default function DiseaseDetection() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
-  const [crop, setCrop] = useState('');
-  const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
+  const [crop, setCrop] = useState("");
+  const [location, setLocation] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // helper: convert File -> base64 (data URL)
   function fileToBase64(file) {
@@ -26,65 +25,64 @@ export default function DiseaseDetection() {
   }
 
   async function onSubmit(e) {
-  e.preventDefault();
-  setError('');
-  setResult(null);
+    e.preventDefault();
+    setError("");
+    setResult(null);
 
-  if (!file) {
-    swalError("Image Required", "Please capture or upload an image first.");
-    return;
-  }
+    if (!file) {
+      swalError("Image Required", "Please capture or upload an image first.");
+      return;
+    }
 
-  if (!crop.trim()) {
-    swalError("Crop Name Required", "Please enter the crop name.");
-    return;
-  }
+    if (!crop.trim()) {
+      swalError("Crop Name Required", "Please enter the crop name.");
+      return;
+    }
 
-  // 🔔 Confirm before analysis
-  const confirm = await swalConfirm({
-    title: "Analyze Crop?",
-    text: "AI will analyze the image and generate recommendations",
-    confirmText: "Analyze",
-  });
-
-  if (!confirm.isConfirmed) return;
-
-  try {
-    setLoading(true);
-
-    const base64 = await fileToBase64(file);
-
-    const data = await createScan({
-      imageUrl: base64,
-      meta: { crop, location, notes },
+    // 🔔 Confirm before analysis
+    const confirm = await swalConfirm({
+      title: "Analyze Crop?",
+      text: "AI will analyze the image and generate recommendations",
+      confirmText: "Analyze",
     });
 
-    setResult(data);
+    if (!confirm.isConfirmed) return;
 
-    // ✅ Success SweetAlert
-    swalSuccess(
-      "Analysis Complete",
-      "Crop disease detection completed successfully"
-    );
-  } catch (err) {
-    console.error(err);
+    try {
+      setLoading(true);
 
-    // ❌ Error SweetAlert
-    swalError(
-      "Analysis Failed",
-      "Unable to analyze image. Please try again."
-    );
-  } finally {
-    setLoading(false);
+      const base64 = await fileToBase64(file);
+
+      const data = await createScan({
+        imageUrl: base64,
+        meta: { crop, location, notes },
+      });
+
+      setResult(data);
+
+      // ✅ Success SweetAlert
+      swalSuccess(
+        "Analysis Complete",
+        "Crop disease detection completed successfully",
+      );
+    } catch (err) {
+      console.error(err);
+
+      // ❌ Error SweetAlert
+      swalError(
+        "Analysis Failed",
+        "Unable to analyze image. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   }
-}
-
 
   function handleFileChange(e) {
     const f = e.target.files?.[0] || null;
     setFile(f);
     setResult(null);
-    setError('');
+    setError("");
 
     if (f) {
       const url = URL.createObjectURL(f);
@@ -93,23 +91,25 @@ export default function DiseaseDetection() {
       setPreview(null);
     }
   }
-
   // ==== Friendly recommendation view ====
-  const disease = result?.result?.disease || 'No clear disease detected';
+  const disease = result?.result?.disease || "No clear disease detected";
+
   const confidence =
-    typeof result?.result?.confidence === 'number'
-      ? Math.round(result.result.confidence * (result.result.confidence <= 1 ? 100 : 1))
-      : null; // handle 0.87 vs 87
-  const recommendationText =
-    result?.result?.recommendation ||
-    result?.recommendation ||
-    'No specific recommendation returned. Monitor crop closely and consult a local expert if symptoms worsen.';
+    typeof result?.result?.confidence === "number"
+      ? Math.round(
+          result.result.confidence * (result.result.confidence <= 1 ? 100 : 1),
+        )
+      : null;
+
   const severity = result?.result?.severity || null;
+  const type = result?.result?.type || null;
+  const fertilizer = result?.result?.fertilizer || null;
+  const recommendations = result?.result?.recommendations || [];
 
   return (
     <div className="d-flex">
       <Sidebar />
-      <main className="flex-grow-1" style={{ background: '#fafaf8' }}>
+      <main className="flex-grow-1" style={{ background: "#fafaf8" }}>
         <div className="container-fluid py-4">
           <PageHeader
             title="Crop Disease Detection"
@@ -131,9 +131,11 @@ export default function DiseaseDetection() {
                   <form onSubmit={onSubmit}>
                     <div
                       className="border rounded-3 p-4 text-center mb-3"
-                      style={{ borderStyle: 'dashed' }}
+                      style={{ borderStyle: "dashed" }}
                     >
-                      <div className="mb-2 fw-semibold">Upload Crop Image <span className="text-danger">*</span></div>
+                      <div className="mb-2 fw-semibold">
+                        Upload Crop Image <span className="text-danger">*</span>
+                      </div>
                       <div className="text-muted">
                         Take a clear photo of your crop for accurate analysis
                       </div>
@@ -145,9 +147,9 @@ export default function DiseaseDetection() {
                             src={preview}
                             alt="Selected crop"
                             style={{
-                              maxWidth: '100%',
+                              maxWidth: "100%",
                               maxHeight: 220,
-                              objectFit: 'contain',
+                              objectFit: "contain",
                               borderRadius: 8,
                             }}
                           />
@@ -180,14 +182,19 @@ export default function DiseaseDetection() {
                       </div>
 
                       {file && (
-                        <div className="mt-2 text-muted" style={{ fontSize: 12 }}>
+                        <div
+                          className="mt-2 text-muted"
+                          style={{ fontSize: 12 }}
+                        >
                           Selected: {file.name}
                         </div>
                       )}
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label">Crop Name <span className="text-danger">*</span></label>
+                      <label className="form-label">
+                        Crop Name <span className="text-danger">*</span>
+                      </label>
                       <input
                         className="form-control"
                         placeholder="e.g., Tomato, Rice, Wheat..."
@@ -229,7 +236,7 @@ export default function DiseaseDetection() {
                           Analyzing...
                         </>
                       ) : (
-                        'Analyze Crop Health'
+                        "Analyze Crop Health"
                       )}
                     </button>
                   </form>
@@ -241,81 +248,129 @@ export default function DiseaseDetection() {
             <div className="col-12 col-xl-6">
               <div className="card border-0 shadow-sm h-100">
                 <div className="card-body d-flex flex-column text-muted">
-                  <h4 className="mb-3 text-center">Analysis Results</h4>
+                  <h3 className="mb-4 text-center fw-bold">Analysis Results</h3>
 
                   {!result ? (
                     <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center">
                       <div>Ready for Analysis</div>
                       <p className="mt-2 mb-0">
-                        Upload a crop image and provide details to get a simple, clear
-                        disease diagnosis and fertilizer/treatment recommendation.
+                        Upload a crop image and provide details to get a simple,
+                        clear disease diagnosis and fertilizer/treatment
+                        recommendation.
                       </p>
                     </div>
                   ) : (
                     <>
                       {/* Summary header */}
-                      <div className="mb-3">
-                        <div className="text-uppercase text-muted" style={{ fontSize: 11 }}>
+                      {/* ===================== RESULT SECTION ===================== */}
+                      <div className="mb-4">
+                        {/* -------- Detected Condition -------- */}
+                        <div className="text-uppercase text-muted fw-semibold fs-5 mb-2">
                           Detected Condition
                         </div>
-                        <div className="d-flex align-items-center gap-2 mt-1">
-                          <span className="fw-semibold" style={{ fontSize: 18 }}>
-                            {disease}
+
+                        <div className="d-flex align-items-center flex-wrap gap-3">
+                          {/* Disease Name */}
+                          <span className="fw-bold fs-4 text-dark">
+                            {disease
+                              ?.replace(/___/g, " - ")
+                              ?.replace(/_/g, " ")}
                           </span>
+
+                          {/* Severity Badge */}
                           {severity && (
-                            <span className="badge bg-warning text-dark">
+                            <span
+                              className={`badge fs-6 px-3 py-2 rounded-pill ${
+                                severity === "High"
+                                  ? "bg-danger"
+                                  : severity === "Medium"
+                                    ? "bg-warning text-dark"
+                                    : "bg-success"
+                              }`}
+                            >
                               Severity: {severity}
                             </span>
                           )}
+
+                          {/* Confidence Badge */}
                           {confidence !== null && (
-                            <span className="badge bg-success-subtle text-success border border-success-subtle">
-                              {confidence}% confidence
+                            <span className="badge fs-6 px-3 py-2 rounded-pill bg-success-subtle text-success border border-success-subtle">
+                              {confidence}% Confidence
                             </span>
                           )}
                         </div>
-                        <div className="text-muted mt-1" style={{ fontSize: 13 }}>
-                          Crop: <span className="fw-semibold">{crop || 'Unknown'}</span>
+
+                        {/* Crop + Location */}
+                        <div className="mt-3 fs-5">
+                          <div className="mb-2">
+                            <span className="text-muted fw-semibold me-2">
+                              Crop:
+                            </span>
+                            <span className="fw-bold text-dark">
+                              {crop || "Unknown"}
+                            </span>
+                          </div>
+
                           {location && (
-                            <>
-                              {' '}
-                              · Location:{' '}
-                              <span className="fw-semibold">{location}</span>
-                            </>
+                            <div>
+                              <span className="text-muted fw-semibold me-2">
+                                Location:
+                              </span>
+                              <span className="fw-semibold text-dark">
+                                {location}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </div>
 
-                      {/* Recommendation */}
-                      <div className="mb-3">
-                        <div className="text-uppercase text-muted mb-1" style={{ fontSize: 11 }}>
+                      <hr className="my-4" />
+
+                      {/* ===================== RECOMMENDATION SECTION ===================== */}
+                      <div className="mb-4">
+                        <div className="text-uppercase text-muted fw-semibold fs-5 mb-3">
                           Recommended Actions
                         </div>
-                        <div style={{ fontSize: 14, lineHeight: 1.6 }}>
-                          {recommendationText}
-                        </div>
-                      </div>
 
-                      {/* Optional: show notes & raw JSON for debugging */}
-                      {notes && (
-                        <div className="mb-3">
-                          <div
-                            className="text-uppercase text-muted mb-1"
-                            style={{ fontSize: 11 }}
-                          >
-                            Your Notes
+                        {/* Disease Type */}
+                        {type && (
+                          <div className="mb-3 fs-5">
+                            <span className="fw-semibold me-2">
+                              Disease Type:
+                            </span>
+                            <span className="badge bg-info text-dark fs-6 px-3 py-2 rounded-pill">
+                              {type}
+                            </span>
                           </div>
-                          <div style={{ fontSize: 13 }}>{notes}</div>
-                        </div>
-                      )}
+                        )}
 
-                      <details className="mt-auto" style={{ fontSize: 12 }}>
-                        <summary className="text-secondary" style={{ cursor: 'pointer' }}>
-                          View raw AI response (for debugging)
-                        </summary>
-                        <pre className="bg-light p-2 mt-2 text-start">
-                          {JSON.stringify(result, null, 2)}
-                        </pre>
-                      </details>
+                        {/* Fertilizer */}
+                        {fertilizer && (
+                          <div className="mb-3 fs-5">
+                            <span className="fw-semibold me-2">
+                              Recommended Fertilizer:
+                            </span>
+                            <span className="badge bg-success fs-6 px-3 py-2 rounded-pill">
+                              {fertilizer}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Recommendations List */}
+                        {recommendations.length > 0 ? (
+                          <ul className="ps-3 fs-5">
+                            {recommendations.map((rec, index) => (
+                              <li key={index} className="mb-2">
+                                {rec}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="fs-5 text-muted">
+                            Monitor crop closely and consult local expert.
+                          </div>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
